@@ -185,6 +185,29 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Start
         class: 'editor-content',
         'data-placeholder': placeholder,
       },
+      // Make Enter create line break, Shift+Enter or double Enter for paragraph
+      handleKeyDown: (view, event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+          // Check if we're in a list - let default behavior handle it
+          const { state } = view;
+          const { $from } = state.selection;
+          const parent = $from.parent;
+
+          // Allow default Enter behavior in lists
+          if (parent.type.name === 'listItem') {
+            return false;
+          }
+
+          // Insert hard break instead of new paragraph
+          view.dispatch(
+            state.tr.replaceSelectionWith(
+              state.schema.nodes.hardBreak.create()
+            ).scrollIntoView()
+          );
+          return true;
+        }
+        return false;
+      },
     },
   });
 
