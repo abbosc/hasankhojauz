@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { usePost, usePosts } from '../hooks/usePosts.jsx';
+import { useMeta } from '../hooks/useMeta.jsx';
 import { RenderContent } from '../components/RichTextEditor';
 import PostCard from '../components/PostCard';
 
@@ -26,6 +27,14 @@ export default function BlogPostPage() {
   const { slug } = useParams();
   const { post, loading, error } = usePost(slug);
   const { posts: relatedPosts } = usePosts({ published: true, limit: 3 });
+
+  // Set meta tags for social sharing
+  useMeta({
+    title: post?.title,
+    description: post?.excerpt,
+    image: post?.thumbnail,
+    url: typeof window !== 'undefined' ? window.location.href : '',
+  });
 
   if (loading) {
     return (

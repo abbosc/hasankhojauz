@@ -185,10 +185,9 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Start
         class: 'editor-content',
         'data-placeholder': placeholder,
       },
-      // Make Enter create line break, Shift+Enter or double Enter for paragraph
+      // Make Enter create line break
       handleKeyDown: (view, event) => {
         if (event.key === 'Enter' && !event.shiftKey) {
-          // Check if we're in a list - let default behavior handle it
           const { state } = view;
           const { $from } = state.selection;
           const parent = $from.parent;
@@ -207,6 +206,15 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Start
           return true;
         }
         return false;
+      },
+      // Convert pasted paragraphs to line breaks
+      transformPastedHTML(html) {
+        // Replace closing </p> followed by opening <p> with <br>
+        // This converts paragraph breaks to line breaks
+        return html
+          .replace(/<\/p>\s*<p[^>]*>/gi, '<br>')
+          .replace(/<p[^>]*>/gi, '')
+          .replace(/<\/p>/gi, '<br>');
       },
     },
   });
