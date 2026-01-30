@@ -155,12 +155,16 @@ const MenuBar = ({ editor }) => {
 
 export default function RichTextEditor({ content, onChange, placeholder = 'Start writing...' }) {
   const initialContentSet = useRef(false);
+  const editorRef = useRef(null);
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         heading: {
           levels: [2, 3],
+        },
+        hardBreak: {
+          keepMarks: true,
         },
       }),
       Image.configure({
@@ -186,28 +190,57 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Start
         class: 'editor-content',
         'data-placeholder': placeholder,
       },
-      // Handle paste to preserve formatting
-      handlePaste: (view, event) => {
-        const html = event.clipboardData?.getData('text/html');
-        if (html) {
-          // Let TipTap handle HTML paste naturally
-          return false;
-        }
-        // For plain text, check if it looks like it has formatting markers
-        const text = event.clipboardData?.getData('text/plain');
-        if (text) {
-          // Convert common text patterns to formatting
-          // This helps with apps that don't provide HTML
-          return false;
-        }
-        return false;
-      },
-    },
-    // Parse HTML content more permissively
-    parseOptions: {
-      preserveWhitespace: 'full',
     },
   });
+
+  // Store editor ref for paste handler
+  useEffect(() => {
+    editorRef.current = editor;
+  }, [editor]);
+
+  // Custom paste handler to preserve line breaks
+  useEffect(() => {
+    const handlePaste = (event) => {
+      const currentEditor = editorRef.current;
+      if (!currentEditor || !currentEditor.isFocused) return;
+
+      const html = event.clipboardData?.getData('text/html');
+
+      // If there's HTML content, let TipTap handle it
+      if (html && html.includes('<')) {
+        return;
+      }
+
+      // Handle plain text - preserve line breaks
+      const text = event.clipboardData?.getData('text/plain');
+      if (text) {
+        event.preventDefault();
+
+        // Convert text with line breaks to HTML
+        // Double line breaks = new paragraph
+        // Single line breaks = hard break (<br>)
+        const paragraphs = text.split(/\n\n+/);
+        const htmlContent = paragraphs
+          .map(para => {
+            const withBreaks = para
+              .split('\n')
+              .map(line => line.trim())
+              .filter(line => line.length > 0)
+              .join('<br>');
+            return withBreaks ? `<p>${withBreaks}</p>` : '';
+          })
+          .filter(p => p.length > 0)
+          .join('');
+
+        if (htmlContent) {
+          currentEditor.commands.insertContent(htmlContent);
+        }
+      }
+    };
+
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, []);
 
   // Update editor content when prop changes (for editing existing posts)
   useEffect(() => {
