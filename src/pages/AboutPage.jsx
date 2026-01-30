@@ -1,15 +1,36 @@
 import { Link } from 'react-router-dom';
+import { useSiteSettings } from '../hooks/useSiteSettings';
 
 export default function AboutPage() {
+  const { data: about, loading } = useSiteSettings('about_page');
+
+  if (loading) {
+    return (
+      <main>
+        <div className="container">
+          <div className="loading-state">Yuklanmoqda...</div>
+        </div>
+      </main>
+    );
+  }
+
+  // Default values if no data
+  const name = about?.name || "Hasanxo'ja MuhammadSodiq";
+  const subtitle = about?.subtitle || "Shaxsiy blog va fikrlar maydoni";
+  const bio = about?.bio || "Assalomu alaykum! Bu shaxsiy blogimga xush kelibsiz.";
+  const photo = about?.photo || '';
+  const email = about?.email || '';
+  const telegram = about?.telegram || '';
+  const instagram = about?.instagram || '';
+  const linkedin = about?.linkedin || '';
+
   return (
     <main>
       {/* About Header */}
       <header className="category-header-editorial">
         <div className="container">
           <h1 className="category-page-title-editorial">Men haqimda</h1>
-          <p className="category-description-editorial">
-            Hasanxo'ja MuhammadSodiq - shaxsiy blog va fikrlar maydoni
-          </p>
+          <p className="category-description-editorial">{subtitle}</p>
         </div>
       </header>
 
@@ -17,47 +38,59 @@ export default function AboutPage() {
       <section className="article-body-editorial">
         <div className="container content-narrow">
           <div className="article-content-editorial about-content">
-            <p>
-              Assalomu alaykum! Men <strong>Hasanxo'ja MuhammadSodiq</strong>man.
-              Bu shaxsiy blogimga xush kelibsiz. Bu yerda men o'z fikrlarim,
-              tajribalarim va qiziqarli mavzular haqida yozaman.
-            </p>
-
-            <h2>Blog haqida</h2>
-            <p>
-              Bu blog mening shaxsiy maydonim bo'lib, u yerda turli mavzularda
-              o'z fikrlarimni baham ko'raman. Maqsadim - foydali ma'lumotlar ulashish,
-              ilhomlantirish va o'quvchilar bilan aloqa o'rnatish.
-            </p>
-
-            <h2>Qiziqishlarim</h2>
-            <p>
-              Men turli sohalarga qiziqaman va bu blogda quyidagi mavzular haqida yozaman:
-            </p>
-            <ul>
-              <li><strong>Texnologiya</strong> &mdash; Yangi texnologiyalar va dasturlash haqida</li>
-              <li><strong>Hayot</strong> &mdash; Kundalik hayot, tajribalar va fikrlar</li>
-              <li><strong>Ta'lim</strong> &mdash; O'rganish va o'z ustida ishlash haqida</li>
-              <li><strong>Sayohat</strong> &mdash; Yangi joylar va madaniyatlar kashfiyoti</li>
-            </ul>
-
-            <h2>Aloqa</h2>
-            <p>
-              Men bilan bog'lanishni xohlasangiz, quyidagi manzilga yozing:
-            </p>
-            <p>
-              <a href="mailto:hasankhoja@example.com">hasankhoja@example.com</a>
-            </p>
-
-            <h2>Ijtimoiy tarmoqlar</h2>
-            <p>
-              Meni ijtimoiy tarmoqlarda ham kuzatib boring:
-            </p>
-            <div className="about-social">
-              <a href="https://t.me/hasankhoja" target="_blank" rel="noopener noreferrer">Telegram</a>
-              <a href="https://instagram.com/hasankhoja" target="_blank" rel="noopener noreferrer">Instagram</a>
-              <a href="https://linkedin.com/in/hasankhoja" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            {/* Photo and Name */}
+            <div className="about-intro">
+              {photo && (
+                <div className="about-photo">
+                  <img src={photo} alt={name} />
+                </div>
+              )}
+              <div className="about-name-section">
+                <h2>{name}</h2>
+                <p className="about-subtitle">{subtitle}</p>
+              </div>
             </div>
+
+            {/* Bio */}
+            <div className="about-bio">
+              {bio.split('\n').map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))}
+            </div>
+
+            {/* Contact */}
+            {email && (
+              <>
+                <h2>Aloqa</h2>
+                <p>
+                  <a href={`mailto:${email}`}>{email}</a>
+                </p>
+              </>
+            )}
+
+            {/* Social Links */}
+            {(telegram || instagram || linkedin) && (
+              <>
+                <h2>Ijtimoiy tarmoqlar</h2>
+                <div className="about-social">
+                  {telegram && (
+                    <a href={telegram} target="_blank" rel="noopener noreferrer">
+                      Telegram
+                    </a>
+                  )}
+                  {instagram && (
+                    <a href={instagram} target="_blank" rel="noopener noreferrer">
+                      Instagram
+                    </a>
+                  )}
+                  {linkedin && (
+                    <a href={linkedin} target="_blank" rel="noopener noreferrer">
+                      LinkedIn
+                    </a>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </section>

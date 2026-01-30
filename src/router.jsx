@@ -14,6 +14,7 @@ import AdminLogin from './pages/admin/Login';
 import PostsList from './pages/admin/PostsList';
 import PostEditor from './pages/admin/PostEditor';
 import CategoriesManager from './pages/admin/Categories';
+import AboutEditor from './pages/admin/AboutEditor';
 
 export const router = createBrowserRouter([
   {
@@ -41,6 +42,7 @@ export const router = createBrowserRouter([
           { path: 'posts/new', element: <PostEditor /> },
           { path: 'posts/:id', element: <PostEditor /> },
           { path: 'categories', element: <CategoriesManager /> },
+          { path: 'about', element: <AboutEditor /> },
         ],
       },
     ],
