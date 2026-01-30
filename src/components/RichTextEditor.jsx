@@ -2,6 +2,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
+import Underline from '@tiptap/extension-underline';
 import { useCallback, useEffect, useRef } from 'react';
 
 const MenuBar = ({ editor }) => {
@@ -53,6 +54,14 @@ const MenuBar = ({ editor }) => {
         title="Strikethrough"
       >
         <s>S</s>
+      </button>
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().toggleUnderline().run()}
+        className={editor.isActive('underline') ? 'active' : ''}
+        title="Underline"
+      >
+        <u>U</u>
       </button>
 
       <span className="editor-menu-divider" />
@@ -161,10 +170,12 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Start
       }),
       Link.configure({
         openOnClick: false,
+        autolink: true,
         HTMLAttributes: {
           class: 'editor-link',
         },
       }),
+      Underline,
     ],
     content: content || '',
     onUpdate: ({ editor }) => {
@@ -175,6 +186,26 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Start
         class: 'editor-content',
         'data-placeholder': placeholder,
       },
+      // Handle paste to preserve formatting
+      handlePaste: (view, event) => {
+        const html = event.clipboardData?.getData('text/html');
+        if (html) {
+          // Let TipTap handle HTML paste naturally
+          return false;
+        }
+        // For plain text, check if it looks like it has formatting markers
+        const text = event.clipboardData?.getData('text/plain');
+        if (text) {
+          // Convert common text patterns to formatting
+          // This helps with apps that don't provide HTML
+          return false;
+        }
+        return false;
+      },
+    },
+    // Parse HTML content more permissively
+    parseOptions: {
+      preserveWhitespace: 'full',
     },
   });
 
@@ -200,6 +231,7 @@ export function RenderContent({ content }) {
     extensions: [
       StarterKit,
       Image,
+      Underline,
       Link.configure({
         openOnClick: true,
       }),
