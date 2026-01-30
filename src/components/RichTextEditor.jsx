@@ -2,7 +2,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 const MenuBar = ({ editor }) => {
   if (!editor) return null;
@@ -145,6 +145,8 @@ const MenuBar = ({ editor }) => {
 };
 
 export default function RichTextEditor({ content, onChange, placeholder = 'Start writing...' }) {
+  const initialContentSet = useRef(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -175,6 +177,14 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Start
       },
     },
   });
+
+  // Update editor content when prop changes (for editing existing posts)
+  useEffect(() => {
+    if (editor && content && !initialContentSet.current) {
+      editor.commands.setContent(content);
+      initialContentSet.current = true;
+    }
+  }, [editor, content]);
 
   return (
     <div className="rich-text-editor">
