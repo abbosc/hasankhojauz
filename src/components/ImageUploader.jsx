@@ -105,7 +105,7 @@ export default function ImageUploader({ onUpload, currentImage }) {
       for (const item of clipboardItems) {
         const imageType = item.types.find(type => type.startsWith('image/'));
         if (imageType) {
-          const blob = await item.getBlob(imageType);
+          const blob = await item.getType(imageType);
           const file = new File([blob], `pasted-${Date.now()}.png`, { type: imageType });
           await uploadFile(file);
           return;
