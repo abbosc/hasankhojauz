@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { usePosts, useCategories } from '../hooks/usePosts.jsx';
+import { useMeta } from '../hooks/useMeta.jsx';
 import { supabase } from '../lib/supabase';
 
 const SearchIcon = () => (
@@ -30,6 +31,13 @@ export default function CategoryPage() {
       fetchCategory();
     }
   }, [slug]);
+
+  // Set meta tags for category page
+  useMeta({
+    title: category?.name || slug,
+    description: category?.description || `${category?.name || slug} kategoriyasidagi maqolalar`,
+    canonical: `https://hasanxoja.uz/category/${slug}`,
+  });
 
   // Filter posts by search
   const filteredPosts = posts.filter((post) => {

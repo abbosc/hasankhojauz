@@ -28,12 +28,38 @@ export default function BlogPostPage() {
   const { post, loading, error } = usePost(slug);
   const { posts: relatedPosts } = usePosts({ published: true, limit: 3 });
 
+  // Build JSON-LD for BlogPosting
+  const jsonLd = post ? {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    'headline': post.title,
+    'description': post.excerpt || '',
+    'image': post.thumbnail || 'https://hasanxoja.uz/og-image.jpg',
+    'datePublished': post.published_at || post.created_at,
+    'dateModified': post.updated_at || post.published_at || post.created_at,
+    'author': {
+      '@type': 'Person',
+      'name': "Hasanxo'ja MuhammadSodiq",
+      'url': 'https://hasanxoja.uz/about'
+    },
+    'publisher': {
+      '@type': 'Person',
+      'name': "Hasanxo'ja MuhammadSodiq"
+    },
+    'mainEntityOfPage': {
+      '@type': 'WebPage',
+      '@id': `https://hasanxoja.uz/blog/${post.slug}`
+    }
+  } : null;
+
   // Set meta tags for social sharing
   useMeta({
     title: post?.title,
     description: post?.excerpt,
     image: post?.thumbnail,
     url: typeof window !== 'undefined' ? window.location.href : '',
+    canonical: post ? `https://hasanxoja.uz/blog/${post.slug}` : undefined,
+    jsonLd,
   });
 
   if (loading) {

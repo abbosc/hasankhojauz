@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePosts, useCategories } from '../hooks/usePosts.jsx';
+import { useMeta } from '../hooks/useMeta.jsx';
 import PostCard from '../components/PostCard';
 
 const SearchIcon = () => (
@@ -15,6 +16,13 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const { posts, loading, error } = usePosts({ published: true });
   const { categories } = useCategories();
+
+  // Set meta tags for homepage
+  useMeta({
+    title: 'Bosh sahifa',
+    description: "Hasanxo'ja MuhammadSodiq - shaxsiy blog va fikrlar maydoni. Eng so'nggi maqolalar va fikrlar.",
+    canonical: 'https://hasanxoja.uz',
+  });
 
   // Filter posts based on category and search
   const filteredPosts = posts.filter((post) => {

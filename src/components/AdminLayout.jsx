@@ -1,9 +1,32 @@
+import { useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.jsx';
 
 export default function AdminLayout() {
   const { logout } = useAuth();
   const navigate = useNavigate();
+
+  // Set noindex for admin pages
+  useEffect(() => {
+    let meta = document.querySelector('meta[name="robots"]');
+    const originalContent = meta?.getAttribute('content');
+
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.setAttribute('name', 'robots');
+      document.head.appendChild(meta);
+    }
+
+    meta.setAttribute('content', 'noindex, nofollow');
+
+    return () => {
+      if (originalContent) {
+        meta.setAttribute('content', originalContent);
+      } else if (meta.parentNode) {
+        meta.remove();
+      }
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();

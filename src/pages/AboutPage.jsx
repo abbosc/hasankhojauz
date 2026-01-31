@@ -1,8 +1,16 @@
 import { Link } from 'react-router-dom';
 import { useSiteSettings } from '../hooks/useSiteSettings';
+import { useMeta } from '../hooks/useMeta.jsx';
 
 export default function AboutPage() {
   const { data: about, loading } = useSiteSettings('about_page');
+
+  // Set meta tags for about page
+  useMeta({
+    title: 'Men haqimda',
+    description: "Hasanxo'ja MuhammadSodiq haqida - shaxsiy blog muallifi. Tajribalar, fikrlar va ilhom.",
+    canonical: 'https://hasanxoja.uz/about',
+  });
 
   if (loading) {
     return (
