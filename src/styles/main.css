@@ -1954,7 +1954,7 @@ h3 {
 }
 
 .editor-content p {
-  margin-bottom: 0.5em;
+  margin-bottom: 0;
 }
 
 .editor-content h2 {
@@ -2041,17 +2041,6 @@ h3 {
   height: 18px;
   background: rgba(255, 255, 255, 0.2);
   margin: 0 4px;
-}
-
-/* Tippy tooltip animation for bubble menu */
-.tippy-box[data-animation='shift-away-subtle'][data-state='hidden'] {
-  opacity: 0;
-  transform: translateY(4px);
-}
-
-.tippy-box[data-animation='shift-away-subtle'][data-state='visible'] {
-  opacity: 1;
-  transform: translateY(0);
 }
 
 /* Rendered Content (TipTap output) */

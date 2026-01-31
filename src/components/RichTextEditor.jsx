@@ -24,8 +24,7 @@ const BubbleMenuBar = ({ editor }) => {
     <BubbleMenu
       editor={editor}
       tippyOptions={{
-        duration: [200, 150],
-        animation: 'shift-away-subtle',
+        duration: 150,
       }}
       className="bubble-menu"
     >
