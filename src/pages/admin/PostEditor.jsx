@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { usePostById, useCategories, createPost, updatePost } from '../../hooks/usePosts.jsx';
 import RichTextEditor from '../../components/RichTextEditor';
 import ImageUploader from '../../components/ImageUploader';
+import CategorySelector from '../../components/CategorySelector';
 
 export default function PostEditor() {
   const { id } = useParams();
@@ -202,18 +203,13 @@ export default function PostEditor() {
 
           <div className="editor-sidebar-section">
             <h3>Category</h3>
-            <select
-              name="category_id"
+            <CategorySelector
+              categories={categories}
               value={formData.category_id}
-              onChange={handleChange}
-            >
-              <option value="">Select category</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
+              onChange={(categoryId) =>
+                setFormData((prev) => ({ ...prev, category_id: categoryId }))
+              }
+            />
           </div>
 
           <div className="editor-sidebar-section">

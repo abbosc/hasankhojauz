@@ -1,4 +1,5 @@
-import { useEditor, EditorContent, TiptapBubbleMenu as BubbleMenu } from '@tiptap/react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
@@ -25,6 +26,27 @@ const BubbleMenuBar = ({ editor }) => {
       editor={editor}
       tippyOptions={{
         duration: 150,
+        placement: 'top',
+        appendTo: () => document.body,
+        onMount: (instance) => {
+          const adjustPosition = () => {
+            const popper = instance.popper;
+            const rect = popper.getBoundingClientRect();
+            const sidebarWidth = 270;
+            if (rect.left < sidebarWidth) {
+              const shift = sidebarWidth - rect.left;
+              popper.style.transform = `translateX(${shift}px)`;
+            }
+          };
+          adjustPosition();
+          // Re-adjust on any position update
+          instance._adjustInterval = setInterval(adjustPosition, 50);
+        },
+        onHidden: (instance) => {
+          if (instance._adjustInterval) {
+            clearInterval(instance._adjustInterval);
+          }
+        },
       }}
       className="bubble-menu"
     >

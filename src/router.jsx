@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import Layout from './components/Layout';
 import AdminLayout from './components/AdminLayout';
 import PasswordGate from './components/PasswordGate';
+import ErrorPage from './components/ErrorPage';
 
 // Public pages
 import HomePage from './pages/HomePage';
@@ -20,6 +21,7 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <Layout />,
+    errorElement: <ErrorPage />,
     children: [
       { index: true, element: <HomePage /> },
       { path: 'blog/:slug', element: <BlogPostPage /> },
@@ -29,6 +31,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/admin',
+    errorElement: <ErrorPage />,
     children: [
       { index: true, element: <AdminLogin /> },
       {
