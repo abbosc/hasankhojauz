@@ -1990,6 +1990,70 @@ h3 {
   text-decoration: underline;
 }
 
+/* Bubble Menu - Floating Toolbar */
+.bubble-menu {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  background: var(--color-text);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.15);
+  animation: bubbleMenuFadeIn 0.2s ease-out;
+}
+
+@keyframes bubbleMenuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.bubble-menu button {
+  padding: 6px 10px;
+  font-family: var(--font-ui);
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.8);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.bubble-menu button:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.bubble-menu button.active {
+  color: white;
+  background: var(--color-accent);
+}
+
+.bubble-menu-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 0 4px;
+}
+
+/* Tippy tooltip animation for bubble menu */
+.tippy-box[data-animation='shift-away-subtle'][data-state='hidden'] {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.tippy-box[data-animation='shift-away-subtle'][data-state='visible'] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* Rendered Content (TipTap output) */
 .rendered-content .ProseMirror {
   outline: none;
