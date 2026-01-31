@@ -4,22 +4,10 @@ import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import Underline from '@tiptap/extension-underline';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import LinkDialog from './LinkDialog';
 
-const BubbleMenuBar = ({ editor }) => {
-  const setLink = useCallback(() => {
-    const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('Enter URL:', previousUrl);
-
-    if (url === null) return;
-
-    if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run();
-      return;
-    }
-
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-  }, [editor]);
+const BubbleMenuBar = ({ editor, onLinkClick }) => {
 
   return (
     <BubbleMenu
@@ -125,7 +113,7 @@ const BubbleMenuBar = ({ editor }) => {
 
       <button
         type="button"
-        onClick={setLink}
+        onClick={onLinkClick}
         className={editor.isActive('link') ? 'active' : ''}
         title="Add Link"
       >
@@ -135,7 +123,7 @@ const BubbleMenuBar = ({ editor }) => {
   );
 };
 
-const MenuBar = ({ editor }) => {
+const MenuBar = ({ editor, onLinkClick }) => {
   if (!editor) return null;
 
   const addImage = useCallback(() => {
@@ -143,20 +131,6 @@ const MenuBar = ({ editor }) => {
     if (url) {
       editor.chain().focus().setImage({ src: url }).run();
     }
-  }, [editor]);
-
-  const setLink = useCallback(() => {
-    const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('Enter URL:', previousUrl);
-
-    if (url === null) return;
-
-    if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run();
-      return;
-    }
-
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
   }, [editor]);
 
   return (
@@ -247,7 +221,7 @@ const MenuBar = ({ editor }) => {
 
       <button
         type="button"
-        onClick={setLink}
+        onClick={onLinkClick}
         className={editor.isActive('link') ? 'active' : ''}
         title="Add Link"
       >
@@ -285,6 +259,8 @@ const MenuBar = ({ editor }) => {
 
 export default function RichTextEditor({ content, onChange, placeholder = 'Start writing...' }) {
   const initialContentSet = useRef(false);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [linkDialogInitialUrl, setLinkDialogInitialUrl] = useState('');
 
   const editor = useEditor({
     extensions: [
@@ -326,11 +302,33 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Start
     }
   }, [editor, content]);
 
+  const handleLinkClick = useCallback(() => {
+    if (!editor) return;
+    const previousUrl = editor.getAttributes('link').href || '';
+    setLinkDialogInitialUrl(previousUrl);
+    setLinkDialogOpen(true);
+  }, [editor]);
+
+  const handleLinkSubmit = useCallback((url) => {
+    if (!editor) return;
+    if (url === '') {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run();
+    } else {
+      editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+    }
+  }, [editor]);
+
   return (
     <div className="rich-text-editor">
-      <MenuBar editor={editor} />
-      {editor && <BubbleMenuBar editor={editor} />}
+      <MenuBar editor={editor} onLinkClick={handleLinkClick} />
+      {editor && <BubbleMenuBar editor={editor} onLinkClick={handleLinkClick} />}
       <EditorContent editor={editor} />
+      <LinkDialog
+        isOpen={linkDialogOpen}
+        onClose={() => setLinkDialogOpen(false)}
+        onSubmit={handleLinkSubmit}
+        initialUrl={linkDialogInitialUrl}
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { usePostById, useCategories, createPost, updatePost } from '../../hooks/usePosts.jsx';
+import { usePostById, useCategories, createPost, updatePost, checkSlugAvailable } from '../../hooks/usePosts.jsx';
 import RichTextEditor from '../../components/RichTextEditor';
 import ImageUploader from '../../components/ImageUploader';
 import CategorySelector from '../../components/CategorySelector';
@@ -24,6 +24,8 @@ export default function PostEditor() {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [slugError, setSlugError] = useState(null);
+  const [checkingSlug, setCheckingSlug] = useState(false);
 
   useEffect(() => {
     if (existingPost) {
@@ -38,6 +40,25 @@ export default function PostEditor() {
       });
     }
   }, [existingPost]);
+
+  // Debounced slug validation
+  useEffect(() => {
+    if (!formData.slug) {
+      setSlugError(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setCheckingSlug(true);
+      try {
+        const available = await checkSlugAvailable(formData.slug, isNew ? null : id);
+        setSlugError(available ? null : 'This slug is already in use');
+      } catch (err) {
+        setSlugError(null);
+      }
+      setCheckingSlug(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [formData.slug, id, isNew]);
 
   const generateSlug = (title) => {
     return title
@@ -90,9 +111,16 @@ export default function PostEditor() {
 
       if (isNew) {
         const newPost = await createPost(postData);
-        navigate(`/admin/posts/${newPost.id}`);
+        if (publish) {
+          navigate('/admin/posts');
+        } else {
+          navigate(`/admin/posts/${newPost.id}`);
+        }
       } else {
         await updatePost(id, postData);
+        if (publish && !existingPost?.published) {
+          navigate('/admin/posts');
+        }
       }
     } catch (err) {
       setError(err.message);
@@ -124,7 +152,7 @@ export default function PostEditor() {
           <button
             onClick={() => handleSave(true)}
             className="admin-button primary"
-            disabled={saving}
+            disabled={saving || slugError}
           >
             {saving ? 'Publishing...' : formData.published ? 'Update' : 'Publish'}
           </button>
@@ -150,14 +178,19 @@ export default function PostEditor() {
 
           <div className="form-group">
             <label htmlFor="slug">Slug</label>
-            <input
-              type="text"
-              id="slug"
-              name="slug"
-              value={formData.slug}
-              onChange={handleChange}
-              placeholder="post-url-slug"
-            />
+            <div className="slug-input-wrapper">
+              <input
+                type="text"
+                id="slug"
+                name="slug"
+                value={formData.slug}
+                onChange={handleChange}
+                placeholder="post-url-slug"
+                className={slugError ? 'input-error' : ''}
+              />
+              {checkingSlug && <span className="slug-checking">Checking...</span>}
+            </div>
+            {slugError && <p className="slug-error">{slugError}</p>}
           </div>
 
           <div className="form-group">

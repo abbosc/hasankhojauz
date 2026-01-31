@@ -202,6 +202,25 @@ export async function deletePost(id) {
   if (error) throw error;
 }
 
+export async function bulkDeletePosts(ids) {
+  const { error } = await supabase.from('posts').delete().in('id', ids);
+  if (error) throw error;
+}
+
+export async function bulkUpdatePosts(ids, updates) {
+  const { error } = await supabase.from('posts').update(updates).in('id', ids);
+  if (error) throw error;
+}
+
+export async function checkSlugAvailable(slug, excludeId = null) {
+  let query = supabase.from('posts').select('id').eq('slug', slug);
+  if (excludeId) {
+    query = query.neq('id', excludeId);
+  }
+  const { data } = await query;
+  return data?.length === 0;
+}
+
 // Category mutations
 export async function createCategory(categoryData) {
   const slug = categoryData.slug || generateSlug(categoryData.name);

@@ -1,11 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { usePosts, deletePost } from '../../hooks/usePosts.jsx';
+import { usePosts, useCategories, deletePost, bulkDeletePosts, bulkUpdatePosts } from '../../hooks/usePosts.jsx';
 
 export default function PostsList() {
   const [filter, setFilter] = useState('all');
   const { posts, loading, error, refetch } = usePosts({ published: null });
+  const { categories } = useCategories();
   const navigate = useNavigate();
+
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkCategoryOpen, setBulkCategoryOpen] = useState(false);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const filteredPosts = posts.filter((post) => {
     if (filter === 'all') return true;
@@ -24,6 +29,78 @@ export default function PostsList() {
       }
     }
   };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedIds(new Set(filteredPosts.map(p => p.id)));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
+
+  const handleSelectOne = (id) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`Are you sure you want to delete ${selectedIds.size} post(s)?`)) return;
+
+    setBulkLoading(true);
+    try {
+      await bulkDeletePosts(Array.from(selectedIds));
+      setSelectedIds(new Set());
+      refetch();
+    } catch (err) {
+      alert('Failed to delete posts: ' + err.message);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleBulkPublish = async (publish) => {
+    if (selectedIds.size === 0) return;
+
+    setBulkLoading(true);
+    try {
+      const updates = { published: publish };
+      if (publish) {
+        updates.published_at = new Date().toISOString();
+      }
+      await bulkUpdatePosts(Array.from(selectedIds), updates);
+      setSelectedIds(new Set());
+      refetch();
+    } catch (err) {
+      alert('Failed to update posts: ' + err.message);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleBulkCategoryChange = async (categoryId) => {
+    if (selectedIds.size === 0) return;
+
+    setBulkLoading(true);
+    try {
+      await bulkUpdatePosts(Array.from(selectedIds), { category_id: categoryId || null });
+      setSelectedIds(new Set());
+      setBulkCategoryOpen(false);
+      refetch();
+    } catch (err) {
+      alert('Failed to update posts: ' + err.message);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const isAllSelected = filteredPosts.length > 0 && filteredPosts.every(p => selectedIds.has(p.id));
+  const isSomeSelected = selectedIds.size > 0;
 
   if (loading) {
     return (
@@ -86,6 +163,14 @@ export default function PostsList() {
           <table className="admin-table">
             <thead>
               <tr>
+                <th className="checkbox-cell">
+                  <input
+                    type="checkbox"
+                    checked={isAllSelected}
+                    onChange={handleSelectAll}
+                    className="post-checkbox"
+                  />
+                </th>
                 <th>Title</th>
                 <th>Category</th>
                 <th>Status</th>
@@ -95,7 +180,15 @@ export default function PostsList() {
             </thead>
             <tbody>
               {filteredPosts.map((post) => (
-                <tr key={post.id}>
+                <tr key={post.id} className={selectedIds.has(post.id) ? 'row-selected' : ''}>
+                  <td className="checkbox-cell">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(post.id)}
+                      onChange={() => handleSelectOne(post.id)}
+                      className="post-checkbox"
+                    />
+                  </td>
                   <td className="post-title-cell">
                     <Link to={`/admin/posts/${post.id}`}>{post.title}</Link>
                     {post.thumbnail && (
@@ -172,6 +265,70 @@ export default function PostsList() {
           <Link to="/admin/posts/new" className="admin-button primary">
             Create Post
           </Link>
+        </div>
+      )}
+
+      {isSomeSelected && (
+        <div className="bulk-toolbar">
+          <span className="bulk-count">{selectedIds.size} selected</span>
+          <div className="bulk-actions">
+            <div className="bulk-category-wrapper">
+              <button
+                className="bulk-action-btn"
+                onClick={() => setBulkCategoryOpen(!bulkCategoryOpen)}
+                disabled={bulkLoading}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                  <line x1="7" y1="7" x2="7.01" y2="7" />
+                </svg>
+                Category
+              </button>
+              {bulkCategoryOpen && (
+                <div className="bulk-category-dropdown">
+                  <button onClick={() => handleBulkCategoryChange(null)}>
+                    No Category
+                  </button>
+                  {categories.map(cat => (
+                    <button key={cat.id} onClick={() => handleBulkCategoryChange(cat.id)}>
+                      {cat.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button
+              className="bulk-action-btn"
+              onClick={() => handleBulkPublish(true)}
+              disabled={bulkLoading}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="20,6 9,17 4,12" />
+              </svg>
+              Publish
+            </button>
+            <button
+              className="bulk-action-btn"
+              onClick={() => handleBulkPublish(false)}
+              disabled={bulkLoading}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              </svg>
+              Unpublish
+            </button>
+            <button
+              className="bulk-action-btn delete"
+              onClick={handleBulkDelete}
+              disabled={bulkLoading}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="3,6 5,6 21,6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+              Delete
+            </button>
+          </div>
         </div>
       )}
     </div>

@@ -61,6 +61,66 @@ export default function ImageUploader({ onUpload, currentImage }) {
     }
   };
 
+  const uploadFile = async (file) => {
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image must be less than 5MB');
+      return;
+    }
+
+    setError(null);
+    setUploading(true);
+
+    try {
+      const fileExt = file.name.split('.').pop() || 'png';
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `thumbnails/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+
+      setPreview(publicUrl);
+      onUpload(publicUrl);
+    } catch (err) {
+      setError(err.message || 'Failed to upload image');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handlePaste = async () => {
+    try {
+      const clipboardItems = await navigator.clipboard.read();
+      for (const item of clipboardItems) {
+        const imageType = item.types.find(type => type.startsWith('image/'));
+        if (imageType) {
+          const blob = await item.getBlob(imageType);
+          const file = new File([blob], `pasted-${Date.now()}.png`, { type: imageType });
+          await uploadFile(file);
+          return;
+        }
+      }
+      setError('No image found in clipboard');
+    } catch (err) {
+      if (err.name === 'NotAllowedError') {
+        setError('Clipboard access denied. Please allow clipboard access.');
+      } else {
+        setError('Failed to paste: ' + err.message);
+      }
+    }
+  };
+
   const handleRemove = () => {
     setPreview(null);
     onUpload('');
@@ -93,10 +153,17 @@ export default function ImageUploader({ onUpload, currentImage }) {
             </svg>
             <p>Drop an image here or click to upload</p>
             <div className="upload-buttons">
-              <button type="button" onClick={() => fileInputRef.current?.click()}>
+              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
                 {uploading ? 'Uploading...' : 'Choose File'}
               </button>
-              <button type="button" onClick={handleUrlInput} className="secondary">
+              <button type="button" onClick={handlePaste} className="secondary" disabled={uploading}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14, marginRight: 4 }}>
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                </svg>
+                Paste
+              </button>
+              <button type="button" onClick={handleUrlInput} className="secondary" disabled={uploading}>
                 Use URL
               </button>
             </div>
